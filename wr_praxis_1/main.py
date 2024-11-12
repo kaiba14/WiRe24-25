@@ -27,14 +27,21 @@ def matrix_multiplication(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     n, m_a = a.shape
     m_b, p = b.shape
 
+
     # TODO: test if shape of matrices is compatible and raise error if not
+
+    if m_a != m_b:
+        raise ValueError("Matrix sizes incompatible.")
 
     # Initialize result matrix with zeros
     c = np.zeros((n, p))
 
     # TODO: Compute matrix product without the usage of numpy.dot()
 
-
+    for i in range(n):
+        for j in range(p):
+            for k in range(m_a):
+                c[i, j] += a[i, k] * b[k, j]                
     return c
 
 
@@ -60,12 +67,13 @@ def compare_multiplication(nmax: int, n: int) -> dict:
     x, y_mat_mult, y_numpy, r_mat_mult, r_numpy = [], [], [], [], []
     tr_dict = dict(timing_numpy=y_numpy, timing_mat_mult=y_mat_mult, results_numpy=r_numpy, results_mat_mult=r_mat_mult)
     # TODO: Can be removed if matrices a and b are created in loop
-    a = np.ones((2, 2))
-    b = np.ones((2, 2))
+
 
     for m in range(2, nmax, n):
 
         # TODO: Create random mxm matrices a and b
+        a = np.random.rand(m, m)
+        b = np.random.rand(m, m)
 
         # Execute functions and measure the execution time
         time_mat_mult, result_mat_mult = timedcall(matrix_multiplication, a, b)
@@ -106,7 +114,7 @@ def machine_epsilon(fp_format: np.dtype) -> np.number:
     """
 
     # TODO: create epsilon element with correct initial value and data format fp_format
-    eps = fp_format.type(0.0)
+    eps = fp_format.type(1.0)
 
 
     # Create necessary variables for iteration
@@ -119,6 +127,11 @@ def machine_epsilon(fp_format: np.dtype) -> np.number:
 
     # TODO: determine machine precision without the use of numpy.finfo()
 
+    while one + eps > one:
+        eps /= fp_format.type(2.0)
+        i += 1
+
+    eps *= 2.0
 
     print('{0:4.0f} |  {1:16.8e}   | equal 1'.format(i, eps))
     return eps
@@ -148,7 +161,16 @@ def close(a: np.ndarray, b: np.ndarray, eps: np.number=1e-08) -> bool:
     isclose = False
     # TODO: check if a and b are compareable
 
+    if a.shape != b.shape:
+        raise ValueError("Matrix sizes are incompatible.")
+
     # TODO: check if all entries in a are close to the corresponding entry in b
+    for i in range(a.shape[0]):
+        for j in range(a.shape[1]):
+            if abs(a[i, j] - b[i, j]) > eps:
+                return False
+
+    isclose = True
 
     return isclose
 
@@ -175,12 +197,18 @@ def rotation_matrix(theta: float) -> np.ndarray:
 
     # TODO: convert angle to radians
 
+    theta_rad = np.radians(theta)
+
 
     # TODO: calculate diagonal terms of matrix
 
+    r[0, 0] = np.cos(theta_rad)
+    r[1, 1] = np.cos(theta_rad)
 
     # TODO: off-diagonal terms of matrix
 
+    r[0, 1] = -np.sin(theta_rad)
+    r[1, 0] = np.sin(theta_rad)
 
     return r
 
@@ -198,11 +226,16 @@ def inverse_rotation(theta: float) -> np.ndarray:
 
     Forbidden: numpy.linalg.inv, numpy.linalg.solve
     """
+    m = np.zeros((2, 2))
 
     # TODO: compute inverse rotation matrix
 
-    m = np.zeros((2, 2))
-    
+    theta_rad = np.radians(-theta)
+
+    m[0, 0] = np.cos(theta_rad)
+    m[0, 1] = -np.sin(theta_rad)
+    m[1, 0] = np.sin(theta_rad)
+    m[1, 1] = np.cos(theta_rad)
 
     return m
 
